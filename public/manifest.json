@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Ridifilter",
+  "version": "0.1.0",
+  "description": "리디북스에서 특정 출판사/도서명을 필터링하는 크롬 확장 프로그램.",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://ridibooks.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://ridibooks.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+} 

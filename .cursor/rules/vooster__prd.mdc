@@ -1,0 +1,117 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# 제품 요구사항 문서 (PRD)
+
+## 1. Executive Summary
+리디북스 웹사이트에서 사용자가 특정 출판사 또는 도서명을 필터링해 목록에서 숨길 수 있도록 지원하는 크롬 확장 프로그램이다. 불필요한 콘텐츠를 제거해 검색 효율성과 독서 경험을 향상시키며 개인화된 전자책 탐색을 가능하게 한다.
+
+## 2. Problem Statement
+- 리디북스의 방대한 도서 목록 중 사용자는 관심 없는 출판사/도서를 반복적으로 마주치며 탐색 피로를 느낀다.  
+- 기본 제공되는 검색·필터 기능만으로는 세밀한 배제(필터-아웃)가 불가능하다.  
+- 사용자는 원하지 않는 결과를 일일이 무시하거나 스크롤해야 하는 비효율을 겪는다.
+
+## 3. Goals and Objectives
+- Primary Goal: 특정 출판사/도서명을 사용자가 지정해 결과 목록에서 자동으로 제거
+- Secondary Goals:  
+  - UI/UX 단순화 및 직관적 조작  
+  - 필터 리스트 동기화(로그인 사용자) 및 백업/복원 지원  
+  - 필터 적용 상태 시각적 표시 및 실시간 반영
+- Success Metrics:  
+  - 30일 내 일간 활성이용자(Daily Active Users) 1,000명 달성  
+  - 필터 설정 후 평균 탐색 시간 25% 감소  
+  - 사용자 만족도 설문(5점 척도) 4.0 이상
+
+## 4. Target Audience
+### Primary Users
+- 20~40대 전자책 마니아, 특정 장르·출판사 취향이 뚜렷한 독자  
+- 반복 구매 고객, RSS/알림 기능을 적극 활용하는 파워 유저
+### Secondary Users
+- 리디북스 커뮤니티 리뷰어, 서평 블로거  
+- 출판사/콘텐츠 큐레이터(시장 조사를 위해 필요 없는 데이터 제거)
+
+## 5. User Stories
+- “전문 서적만 찾는 독자로서, 특정 로맨스 출판사를 숨겨서 검색 시간을 줄이고 싶다.”  
+- “시리즈 중복 노출을 피하고 싶어, 이미 가지고 있는 도서명을 필터링하여 안 보이게 하고 싶다.”  
+- “다른 PC에서도 동일한 필터를 쓰기 위해 계정 간 설정을 동기화하고 싶다.”  
+- “필터가 작동 중임을 한눈에 보고, 잠시 해제할 수 있으면 좋겠다.”
+
+## 6. Functional Requirements
+### Core Features
+1. 출판사 필터링  
+   - 설명: 사용자가 입력 또는 선택한 출판사명을 기준으로 결과 목록에서 해당 출판사 도서 카드를 DOM 상에서 제거  
+   - Acceptance Criteria:  
+     * 확장 아이콘 클릭 → 팝업 UI에서 출판사 입력 후 ‘추가’ 버튼 클릭 시 즉시 목록 재렌더링  
+     * 필터리스트에 추가된 출판사 수를 배지로 표시  
+     * 필터링 해제 시 목록이 원래대로 복원
+
+2. 도서명(키워드) 필터링  
+   - 설명: 제목 내 포함 문자열 매칭으로 숨김 처리  
+   - Acceptance Criteria:  
+     * 대·소문자, 공백 무관 부분 매칭  
+     * 50개 키워드까지 등록 가능(입력 시 중복 검증)  
+     * 키워드 우선순위 드래그&드롭 정렬
+
+3. 실시간 필터 적용  
+   - 설명: 사용자가 리디북스 페이지 내 스크롤·페이지네이션 시 AJAX 로드되는 신규 카드에도 필터 규칙 즉시 적용  
+   - Acceptance Criteria:  
+     * MutationObserver 또는 IntersectionObserver 활용으로 100ms 내 필터링 완료  
+     * FPS 저하 없이 Smooth Scroll 유지(> 50fps)
+
+### Supporting Features
+- 임시 비활성화 Toggle: 5분/30분/영구 옵션  
+- 필터 임포트·익스포트(JSON)  
+- 다국어 UI(한국어·영어)  
+- 다크모드 자동 연동  
+- 통계 대시보드: 일별 숨김 도서 수, 절감 시간 추정
+
+## 7. Non-Functional Requirements
+- Performance: 페이지 렌더 지연 200ms 이하, CPU 점유 10% 미만  
+- Security: Chrome Extension Content Security Policy 준수, 로컬 스토리지 암호화(Optional)  
+- Usability: 최대 3클릭 내 필터 등록, Material Design 준수  
+- Scalability: 규칙 1,000개까지 성능 유지  
+- Compatibility: Chrome v110+, Edge Chromium, 리디북스 Web 최신 레이아웃 추적
+
+## 8. Technical Considerations
+- Architecture: Manifest V3 기반, background service worker + content script  
+- Data Storage: chrome.storage.sync (로그인 시 Google 계정 연동), fallback localStorage  
+- Core Libraries:  
+  - UI: Svelte or React + Vite  
+  - Parsing: DOMParser, CSS Selector 리스트  
+- Testing: Jest + Puppeteer 자동화, Lighthouse 성능 측정  
+- CI/CD: GitHub Actions → Chrome Web Store 자동 배포(Manual Review 단계 알림)  
+- Third-Party: day.js, i18next
+
+## 9. Success Metrics and KPIs
+- DAU, MAU, Retention D7/D30  
+- 평균 세션당 숨김 도서 수  
+- 사용자 피드백 NPS ≥ 40  
+- 크래시율 < 0.5%  
+- 평균 컨텐츠 스크롤 길이 20% 감소
+
+## 10. Timeline and Milestones
+- Phase 1 (MVP) – 6주  
+  * 주1: 요구사항 확정, 디자인 가이드  
+  * 주2-4: 출판사/도서명 필터 기능, 기본 UI  
+  * 주5: 크로스브라우저 테스트, QA  
+  * 주6: Chrome Web Store 베타 출시
+- Phase 2 – 4주  
+  * 동기화, 임포트/익스포트, 다크모드, 통계 대시보드
+- Phase 3 – 4주  
+  * AI 추천 필터(예: 읽지 않을 확률 높은 도서 제안), 다국어 지원 확대, Edge Store 배포
+
+## 11. Risks and Mitigation
+- 리디북스 UI 변경 → CSS Selector 의존성 붕괴  
+  · Mitigation: 지속적 e2e 테스트, Selector Abstraction Layer 구축  
+- Chrome Manifest V3 제약으로 인한 퍼포먼스 문제  
+  · Mitigation: service worker 최적화, lazy load  
+- 사용자 저작권 오해(콘텐츠 차단 vs 불법 다운로드 혼동)  
+  · Mitigation: FAQ·가이드 명확 표기, 커뮤니티 모니터링
+
+## 12. Future Considerations
+- AI 기반 추천 차단(사용자 행동 분석)  
+- 모바일 브라우저 확장(PWA)  
+- 필터 공유 마켓플레이스(커뮤니티)  
+- 오픈소스 전환 및 외부 기여 유도
